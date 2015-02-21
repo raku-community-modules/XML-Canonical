@@ -40,7 +40,7 @@ multi sub canonical(XML::Node $xml) {
         else {
             my @aparts = $a.split(/\:/);
             if @aparts[1] {
-                @aparts[0] = $xml.attribs{'xmlns:'~@aparts[0]};
+                @aparts[0] = $xml.nsURI(@aparts[0]);
             }
             else {
                 @aparts[1] = @aparts[0];
@@ -49,7 +49,7 @@ multi sub canonical(XML::Node $xml) {
 
             my @bparts = $b.split(/\:/);
             if @bparts[1] {
-                @bparts[0] = $xml.attribs{'xmlns:'~@bparts[0]};
+                @bparts[0] = $xml.nsURI(@bparts[0]);
             }
             else {
                 @bparts[1] = @bparts[0];
