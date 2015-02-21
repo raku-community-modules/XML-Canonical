@@ -39,9 +39,6 @@ is canonical("<a xmlns=''></a>"),
              'remove superflous namespaces';
 
 # subset stuff?
-skip("pull subset; fold parent xmlns in", 1);
-if (0) {
-is canonical("<a xmlns=\"foo\"><b></b></a>", :subset('b')), # subset syntax not figured out yet -- XPATH?
+is canonical("<a xmlns=\"foo\"><b></b></a>", :subset('/a/b')),
              "<b xmlns=\"foo\"></b>",
              'pull subset; fold parent xmlns in';
-}

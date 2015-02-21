@@ -4,12 +4,12 @@ module XML::Canonical;
 
 our proto canonical(|) is export { * };
 
-multi sub canonical(Str $xml) {
-    return canonical(from-xml($xml).root);
+multi sub canonical(Str $xml, :$subset) {
+    return canonical(from-xml($xml).root, :$subset);
 }
 
-multi sub canonical(XML::Document $xml) {
-    return canonical($xml.root);
+multi sub canonical(XML::Document $xml, :$subset) {
+    return canonical($xml.root, :$subset);
 }
 
 multi sub canonical(XML::Text $xml) {
@@ -52,15 +52,37 @@ multi sub canonical(XML::CDATA $xml) {
     return $text;
 }
 
-multi sub canonical(XML::Element $xml) {
+multi sub canonical(XML::Element $xml, :$subset is copy) {
+    my %extra-attribs;
+    if $subset {
+        my @parts = $subset.split(/\//).grep({$_});
+        die "Invalid subset" if @parts[0] ne $xml.name;
+        @parts.shift;
+        while @parts {
+            for $xml.attribs.kv -> $k, $v {
+                if $k ~~ /^xmlns/ {
+                    %extra-attribs{$k} = $v;
+                }
+            }
+            my $tmp = $xml.elements(:TAG(@parts[0]), :SINGLE);
+            die "Invalid subset" unless $tmp;
+            $xml := $tmp;
+            @parts.shift;
+        }
+    }
+
     my $element = '<' ~ $xml.name;
     my @keys = $xml.attribs.keys;
 
     @keys .= grep(&_needed_attribute.assuming($xml));
+
+    @keys.push(%extra-attribs.keys);
+
     @keys .= sort(&_sort_attributes.assuming($xml));
 
     for @keys -> $k {
-        my $v = $xml.attribs{$k};
+        my $v = %extra-attribs{$k};
+        $v //= $xml.attribs{$k};
 
         # escape " < > &
         $v ~~ s/\&/&amp;/;
