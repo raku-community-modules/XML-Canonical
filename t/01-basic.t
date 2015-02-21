@@ -18,7 +18,6 @@ is canonical("<a foo='bar' baz='boo' xmlns='nsa' xmlns:a='nsb' />"),
              'namespace declarations before normal attributes';
 
 # order attributes with namespaces
-todo('NYI', 1);
 is canonical("<a b:baz=\"b\" foo=\"f\" a:bar=\"b\" xmlns=\"zz\" xmlns:a=\"yy\" xmlns:b=\"xx\"></a>"),
              "<a xmlns=\"zz\" xmlns:a=\"yy\" xmlns:b=\"xx\" foo=\"f\" b:baz=\"b\" a:bar=\"b\"></a>",
              'attributes with namespaces';

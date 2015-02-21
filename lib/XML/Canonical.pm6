@@ -24,14 +24,45 @@ multi sub canonical(XML::Node $xml) {
     my @keys = $xml.attribs.keys;
 
     @keys .= sort(-> $a, $b {
+        # namespaces go first
         if _is_xmlns($a) && !_is_xmlns($b) {
             Less;
         }
         elsif _is_xmlns($b) && !_is_xmlns($a) {
             More;
         }
-        else {
+        # namespaces ordered simply
+        elsif _is_xmlns($a) && _is_xmlns($b) {
             $a cmp $b;
+        }
+        # attributes ordered by namespace, then name
+        # if no namespace, treat the namespace as "" (empty string)
+        else {
+            my @aparts = $a.split(/\:/);
+            if @aparts[1] {
+                @aparts[0] = $xml.attribs{'xmlns:'~@aparts[0]};
+            }
+            else {
+                @aparts[1] = @aparts[0];
+                @aparts[0] = '';
+            }
+
+            my @bparts = $b.split(/\:/);
+            if @bparts[1] {
+                @bparts[0] = $xml.attribs{'xmlns:'~@bparts[0]};
+            }
+            else {
+                @bparts[1] = @bparts[0];
+                @bparts[0] = '';
+            }
+
+            my $p0 = @aparts[0] cmp @bparts[0];
+            if $p0 ne Same {
+                $p0;
+            }
+            else {
+                @aparts[1] cmp @bparts[1];
+            }
         }
     });
 
