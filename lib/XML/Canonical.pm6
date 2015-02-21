@@ -56,6 +56,7 @@ multi sub canonical(XML::Element $xml) {
     my $element = '<' ~ $xml.name;
     my @keys = $xml.attribs.keys;
 
+    @keys .= grep(&_needed_attribute.assuming($xml));
     @keys .= sort(&_sort_attributes.assuming($xml));
 
     for @keys -> $k {
@@ -78,6 +79,23 @@ multi sub canonical(XML::Element $xml) {
     $element ~= '</' ~ $xml.name ~ '>';
 
     return $element;
+}
+
+sub _needed_attribute($xml, $key) {
+    return True unless $key ~~ /^xmlns/;
+
+    if $xml.parent ~~ XML::Document {
+        return True if $xml.attribs{$key};
+        return False;
+    }
+    else {
+        my $value = $xml.attribs{$key};
+        my @keyparts = $key.split(/\:/);
+        @keyparts[1] ||= '';
+
+        return False if($xml.parent.nsURI(@keyparts[1]) eq $value);
+        return True;
+    }
 }
 
 sub _sort_attributes($xml, $a, $b) {

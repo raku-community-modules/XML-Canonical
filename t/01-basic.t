@@ -33,10 +33,10 @@ is canonical("<a><![CDATA[<woo>]]></a>"),
              'strip/convert CDATA';
 
 # remove superflous namespace declarations
-todo('NYI', 1);
+# TODO: (needs better test)
 is canonical("<a xmlns=''></a>"),
              "<a></a>",
-             'remove namespaces';
+             'remove superflous namespaces';
 
 # subset stuff?
 skip("pull subset; fold parent xmlns in", 1);
