@@ -13,10 +13,31 @@ multi sub canonical(XML::Document $xml) {
 }
 
 multi sub canonical(XML::Node $xml) {
-    if ($xml ~~ XML::Text) {
+    if $xml ~~ XML::Text {
         # TODO: escaping, etc
         my $text = $xml.text;
-        $text ~~ s:g/\n/\n/; # normalize line endings
+
+        # normalize line endings
+        $text ~~ s:g/\n/\n/;
+
+        # un-escape everything
+        $text ~~ s:g/\&(\S+?)\;/{
+            my $e = $0.Str.lc;
+            if    $e eq 'amp'          { '&' }
+            elsif $e eq 'apos'         { "'" }
+            elsif $e eq 'lt'           { '<' }
+            elsif $e eq 'gt'           { '>' }
+            elsif $e eq 'quot'         { '"' }
+            elsif $e ~~ /^<[0..9]>+$/  { chr($e) }
+            elsif $e ~~ /^x<[0..9]>+$/ { chr(:16($e.substr(1))) }
+            else { die "Unknown XML entity: "~$e }
+        }/;
+
+        # escape < > &
+        $text ~~ s/\&/&amp;/;
+        $text ~~ s/\</&lt;/;
+        $text ~~ s/\>/&gt;/;
+
         return $text;
     }
 
@@ -68,6 +89,13 @@ multi sub canonical(XML::Node $xml) {
 
     for @keys -> $k {
         my $v = $xml.attribs{$k};
+
+        # escape " < > &
+        $v ~~ s/\&/&amp;/;
+        $v ~~ s/\"/&quot;/;
+        $v ~~ s/\</&lt;/;
+        $v ~~ s/\>/&gt;/;
+
         $element ~= " $k=\"$v\"";
     }
     $element ~= '>';

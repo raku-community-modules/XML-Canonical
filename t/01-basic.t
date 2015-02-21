@@ -23,7 +23,6 @@ is canonical("<a b:baz=\"b\" foo=\"f\" a:bar=\"b\" xmlns=\"zz\" xmlns:a=\"yy\" x
              'attributes with namespaces';
 
 # encode special characters
-todo('NYI', 1);
 is canonical("<a foo=\"&quot;\">&quot;&amp;&quot;</a>"),
              "<a foo=\"&quot;\">\"&amp;\"</a>",
              'special character escapes';
