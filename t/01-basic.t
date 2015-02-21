@@ -28,12 +28,9 @@ is canonical("<a foo=\"&quot;\">&quot;&amp;&quot;</a>"),
              'special character escapes';
 
 # turn CDATA into escape text node
-skip("strip/convert CDATA", 1);
-if (0) {
 is canonical("<a><![CDATA[<woo>]]></a>"),
              "<a>&lt;woo&gt;</a>",
              'strip/convert CDATA';
-}
 
 # remove superflous namespace declarations
 todo('NYI', 1);
