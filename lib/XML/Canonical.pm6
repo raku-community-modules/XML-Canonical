@@ -4,12 +4,12 @@ module XML::Canonical;
 
 our proto canonical(|) is export { * };
 
-multi sub canonical(Str $xml, :$subset) {
-    return canonical(from-xml($xml).root, :$subset);
+multi sub canonical(Str $xml, :$subset, :$exclusive, :@namespaces) {
+    return canonical(from-xml($xml).root, :$subset, :$exclusive, :@namespaces);
 }
 
-multi sub canonical(XML::Document $xml, :$subset) {
-    return canonical($xml.root, :$subset);
+multi sub canonical(XML::Document $xml, :$subset, :$exclusive, :@namespaces) {
+    return canonical($xml.root, :$subset, :$exclusive, :@namespaces);
 }
 
 multi sub canonical(XML::Text $xml) {
@@ -52,7 +52,7 @@ multi sub canonical(XML::CDATA $xml) {
     return $text;
 }
 
-multi sub canonical(XML::Element $xml, :$subset is copy) {
+multi sub canonical(XML::Element $xml, :$subset is copy, :$exclusive, :@namespaces) {
     my %extra-attribs;
     if $subset {
         my @parts = $subset.split(/\//).grep({$_});
@@ -60,8 +60,12 @@ multi sub canonical(XML::Element $xml, :$subset is copy) {
         @parts.shift;
         while @parts {
             for $xml.attribs.kv -> $k, $v {
-                if $k ~~ /^xmlns/ {
-                    %extra-attribs{$k} = $v;
+                if $k ~~ /^xmlns(.*)?/ {
+                    my $part = $1.Str;
+                    $part ~~ s/\:// if $part;
+                    if !$exclusive || @namespaces.grep({ $part ?? $_ eq $part !! $_ eq '#default' }) {
+                        %extra-attribs{$k} = $v;
+                    }
                 }
             }
             my $tmp = $xml.elements(:TAG(@parts[0]), :SINGLE);

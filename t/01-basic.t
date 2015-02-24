@@ -1,7 +1,7 @@
 use v6;
 use Test;
 
-plan 10;
+plan 12;
 
 use XML::Canonical;
 
@@ -42,3 +42,11 @@ is canonical("<a xmlns=''></a>"),
 is canonical("<a xmlns=\"foo\"><b></b></a>", :subset('/a/b')),
              "<b xmlns=\"foo\"></b>",
              'pull subset; fold parent xmlns in';
+
+is canonical("<a xmlns=\"foo\"><b></b></a>", :exclusive, :subset('/a/b')),
+             "<b></b>",
+             'pull subset; exclusive (do not pull parent xmlns)';
+
+is canonical("<a xmlns=\"foo\"><b></b></a>", :exclusive, :subset('/a/b'), :namespaces('#default',)),
+             "<b xmlns=\"foo\"></b>",
+             'pull subset; fold parent xmlns in (exclusive)';
