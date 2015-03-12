@@ -67,6 +67,7 @@ multi sub canonical(XML::Element $xml, :$subset is copy, :$exclusive, :@namespac
                     $part ~~ s/\:// if $part;
                     if !$exclusive || @namespaces.grep({ $part ?? $_ eq $part !! $_ eq '#default' }) {
                         %extra-attribs{$k} = $v;
+                        %exc-rendered-ns{$k} = $v;
                     }
                 }
             }
