@@ -52,7 +52,7 @@ multi sub canonical(XML::CDATA $xml, *%) {
     return $text;
 }
 
-multi sub canonical(XML::Element $xml, :$subset is copy, :$exclusive, :$namespaces, :%exc-rendered-ns is copy) {
+multi sub canonical(XML::Element $xml is copy, :$subset is copy, :$exclusive, :$namespaces, :%exc-rendered-ns is copy) {
     my @namespaces = @$namespaces;
     %exc-rendered-ns{'#default'} = '' unless %exc-rendered-ns;
 
