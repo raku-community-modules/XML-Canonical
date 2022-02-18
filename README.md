@@ -18,7 +18,7 @@ my $xml-string = canonical($xml, :subset('/a/b/c'));
 DESCRIPTION
 ===========
 
-ZXML::Canonical is a module that exports a single subroutine `canonical` that transforms any given `XML` to a canonical version.
+XML::Canonical is a module that exports a single subroutine `canonical` that transforms any given `XML` to a canonical version.
 
 AUTHOR
 ======
