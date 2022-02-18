@@ -1,18 +1,16 @@
 use XML;
 
-unit module XML::Canonical;
+our proto canonical(|) is export {*}
 
-our proto canonical(|) is export { * };
-
-multi sub canonical(Str $xml, :$subset, :$exclusive, :@namespaces) {
-    return canonical(from-xml($xml).root, :$subset, :$exclusive, :@namespaces);
+my multi sub canonical(Str $xml, :$subset, :$exclusive, :@namespaces) {
+    canonical(from-xml($xml).root, :$subset, :$exclusive, :@namespaces)
 }
 
-multi sub canonical(XML::Document $xml, :$subset, :$exclusive, :@namespaces) {
-    return canonical($xml.root, :$subset, :$exclusive, :@namespaces);
+my multi sub canonical(XML::Document $xml, :$subset, :$exclusive, :@namespaces) {
+    canonical($xml.root, :$subset, :$exclusive, :@namespaces)
 }
 
-multi sub canonical(XML::Text $xml, *%) {
+my multi sub canonical(XML::Text $xml, *%) {
     my $text = $xml.text;
 
     # normalize line endings
@@ -33,26 +31,20 @@ multi sub canonical(XML::Text $xml, *%) {
         else { die "Unknown XML entity: "~$e }
     }/;
 
-    # escape < > &
-    $text ~~ s/\&/&amp;/;
-    $text ~~ s/\</&lt;/;
-    $text ~~ s/\>/&gt;/;
-
-    return $text;
+    escape-amp-lt-gt $text
 }
 
-multi sub canonical(XML::CDATA $xml, *%) {
-    my $text = $xml.data;
-
-    # escape < > &
-    $text ~~ s/\&/&amp;/;
-    $text ~~ s/\</&lt;/;
-    $text ~~ s/\>/&gt;/;
-
-    return $text;
+my multi sub canonical(XML::CDATA $xml, *%) {
+    escape-amp-lt-gt $xml.data
 }
 
-multi sub canonical(XML::Element $xml is copy, :$subset is copy, :$exclusive, :$namespaces, :%exc-rendered-ns is copy) {
+multi sub canonical(
+  XML::Element $xml is copy,
+           :$subset is copy,
+           :$exclusive,
+           :$namespaces,
+           :%exc-rendered-ns is copy
+) {
     my @namespaces = @$namespaces;
     %exc-rendered-ns{'#default'} = '' unless %exc-rendered-ns;
 
@@ -82,7 +74,7 @@ multi sub canonical(XML::Element $xml is copy, :$subset is copy, :$exclusive, :$
     my $element = '<' ~ $xml.name;
     my @keys = $xml.attribs.keys;
 
-    @keys .= grep(&_needed_attribute.assuming($xml));
+    @keys = @keys.grep: { needed-attribute $xml, $_ }
 
     if $exclusive {
         # special namespace rules, so strip out all xmlns attributes
@@ -105,7 +97,11 @@ multi sub canonical(XML::Element $xml is copy, :$subset is copy, :$exclusive, :$
         }
 
         for %used_ns.keys {
-            if !(%exc-rendered-ns{$_}:exists) || %exc-rendered-ns{$_} ne ($_ eq '#default' ?? $xml.nsURI('') !! $xml.nsURI($_)) {
+            if !(%exc-rendered-ns{$_}:exists)
+              || %exc-rendered-ns{$_} ne ($_ eq '#default'
+                   ?? $xml.nsURI('')
+                   !! $xml.nsURI($_)
+            ) {
                 if $_ eq '#default' {
                     %extra-attribs{'xmlns'} = $xml.nsURI('');
                     %exc-rendered-ns{'#default'} = $xml.nsURI('');
@@ -120,17 +116,18 @@ multi sub canonical(XML::Element $xml is copy, :$subset is copy, :$exclusive, :$
 
     @keys.append(%extra-attribs.keys);
 
-    @keys .= sort(&_sort_attributes.assuming($xml));
+    @keys = @keys.sort: -> $a, $b { compare-attributes $xml, $a, $b }
 
     for @keys -> $k {
         my $v = %extra-attribs{$k};
         $v //= $xml.attribs{$k};
 
         # escape " < > &
-        $v ~~ s/\&/&amp;/;
-        $v ~~ s/\"/&quot;/;
-        $v ~~ s/\</&lt;/;
-        $v ~~ s/\>/&gt;/;
+        $v = $v
+          .subst('&', '&amp;')
+          .subst('"', '&quot;')
+          .subst('<', '&lt;')
+          .subst('>', '&gt;');
 
         $element ~= " $k=\"$v\"";
     }
@@ -142,37 +139,35 @@ multi sub canonical(XML::Element $xml is copy, :$subset is copy, :$exclusive, :$
 
     $element ~= '</' ~ $xml.name ~ '>';
 
-    return $element;
+    $element
 }
 
-sub _needed_attribute($xml, $key) {
+my sub needed-attribute($xml, $key) {
     return True unless $key ~~ /^xmlns/;
 
     if $xml.parent ~~ XML::Document {
-        return True if $xml.attribs{$key};
-        return False;
+        $xml.attribs{$key}.Bool
     }
     else {
-        my $value = $xml.attribs{$key};
+        my $value := $xml.attribs{$key};
         my @keyparts = $key.split(/\:/);
         @keyparts[1] ||= '';
 
-        return False if ($xml.parent.nsURI(@keyparts[1]) eq $value);
-        return True;
+        $xml.parent.nsURI(@keyparts[1]) ne $value
     }
 }
 
-sub _sort_attributes($xml, $a, $b) {
+my sub compare-attributes($xml, $a, $b) {
     # namespaces go first
-    if _is_xmlns($a) && !_is_xmlns($b) {
-        Less;
+    if is-xmlns($a) && !is-xmlns($b) {
+        Less
     }
-    elsif _is_xmlns($b) && !_is_xmlns($a) {
-        More;
+    elsif is-xmlns($b) && !is-xmlns($a) {
+        More
     }
     # namespaces ordered simply
-    elsif _is_xmlns($a) && _is_xmlns($b) {
-        $a cmp $b;
+    elsif is-xmlns($a) && is-xmlns($b) {
+        $a cmp $b
     }
     # attributes ordered by namespace, then name
     # if no namespace, treat the namespace as "" (empty string)
@@ -195,17 +190,57 @@ sub _sort_attributes($xml, $a, $b) {
             @bparts[0] = '';
         }
 
-        my $p0 = @aparts[0] cmp @bparts[0];
-        if $p0 ne Same {
-            $p0;
-        }
-        else {
-            @aparts[1] cmp @bparts[1];
-        }
+        @aparts[0] cmp @bparts[0] || @aparts[1] cmp @bparts[1]
     }
 }
 
-sub _is_xmlns($a) {
-    return True if ($a eq 'xmlns' || $a ~~ /^xmlns\:/);
-    False;
+sub is-xmlns($a) {
+    $a eq 'xmlns' || $a.starts-with('xmlns:')
 }
+
+# escape < > &
+my sub escape-amp-lt-gt(Str:D $text) {
+    $text
+      .subst('&','&amp;')
+      .subst('<','&lt;')
+      .subst('>','&gt;')
+}
+
+=begin pod
+
+=head1 NAME
+
+XML::Canonical - Provide a canonical version of XML
+
+=head1 SYNOPSIS
+
+=begin code :lang<raku>
+
+use XML::Canonical;
+
+my $xml-string = canonical($xml);
+my $xml-string = canonical($xml, :subset('/a/b/c'));
+
+=end code
+
+=head1 DESCRIPTION
+
+ZXML::Canonical is a module that exports a single subroutine C<canonical>
+that transforms any given C<XML> to a canonical version.
+
+=head1 AUTHOR
+
+Andrew Egeler
+
+Source can be located at: https://github.com/raku-community-modules/XML-Canonical .
+Comments and Pull Requests are welcome.
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2022 Elizabeth Mattijsen
+
+This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
+
+=end pod
+
+# vim: expandtab shiftwidth=4

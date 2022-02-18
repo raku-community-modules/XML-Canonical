@@ -1,12 +1,24 @@
 {
-    "perl" : "6.*",
-    "name" : "XML::Canonical",
-    "version" : "1.0.0",
-    "author" : "github:retupmoca",
-    "description" : "XML Canonicalization",
-    "depends" : [ "XML" ],
-    "provides" : {
-        "XML::Canonical" : "lib/XML/Canonical.pm6"
-    },
-    "source-url" : "git://github.com/retupmoca/P6-XML-Canonical.git"
+  "auth": "zef:raku-community-modules",
+  "author": "Andrew Egeler",
+  "build-depends": [
+  ],
+  "depends": [
+    "XML"
+  ],
+  "description": "Provide a canonical version of XML",
+  "license": "NOASSERTION",
+  "name": "XML::Canonical",
+  "perl": "6.*",
+  "provides": {
+    "XML::Canonical": "lib/XML/Canonical.rakumod"
+  },
+  "resources": [
+  ],
+  "source-url": "git://github.com/retupmoca/P6-XML-Canonical.git",
+  "tags": [
+  ],
+  "test-depends": [
+  ],
+  "version": "1.0.1"
 }
