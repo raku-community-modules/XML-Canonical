@@ -1,6 +1,8 @@
 Revision history or ZXML-Canonical
 
 {{$NEXT}}
+
+1.0.2  2024-11-30T20:44:30+01:00
     - Add CI badge for each OS
     - Fix source-url
 
