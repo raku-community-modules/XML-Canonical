@@ -15,8 +15,9 @@
   },
   "resources": [
   ],
-  "source-url": "git://github.com/retupmoca/P6-XML-Canonical.git",
+  "source-url": "https://github.com/raku-community-modules/XML-Canonical.git",
   "tags": [
+    "XML"
   ],
   "test-depends": [
   ],

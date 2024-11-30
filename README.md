@@ -1,4 +1,4 @@
-[![Actions Status](https://github.com/raku-community-modules/XML-Canonical/workflows/test/badge.svg)](https://github.com/raku-community-modules/XML-Canonical/actions)
+[![Actions Status](https://github.com/raku-community-modules/XML-Canonical/actions/workflows/linux.yml/badge.svg)](https://github.com/raku-community-modules/XML-Canonical/actions) [![Actions Status](https://github.com/raku-community-modules/XML-Canonical/actions/workflows/macos.yml/badge.svg)](https://github.com/raku-community-modules/XML-Canonical/actions) [![Actions Status](https://github.com/raku-community-modules/XML-Canonical/actions/workflows/windows.yml/badge.svg)](https://github.com/raku-community-modules/XML-Canonical/actions)
 
 NAME
 ====

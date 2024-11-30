@@ -1,6 +1,8 @@
 Revision history or ZXML-Canonical
 
 {{$NEXT}}
+    - Add CI badge for each OS
+    - Fix source-url
 
 1.0.1  2022-02-18T21:54:30+01:00
     - First version in the zef ecosystem
